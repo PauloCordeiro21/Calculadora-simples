@@ -6,30 +6,41 @@ function updateDisplay() {
 }
 
 function appendNumber(num) {
+    // Impede começar com o ponto "."
+    if (currentInput === "" && num === '.') return;
+
     // Impede múltiplos pontos no mesmo número
     if (num === '.') {
         const lastNumber = currentInput.split(/[\+\-\*\/%]/).pop();
         if (lastNumber.includes('.')) return;
     }
+    
     currentInput += num;
     updateDisplay();
 }
 
 function appendOperator(op) {
-    // Permite sinal de + ou - no início do cálculo
+    // REGRA SOLICITADA: No início, apenas o sinal de "-" é permitido
     if (currentInput === "") {
-        if (op === '+' || op === '-') {
+        if (op === '-') {
             currentInput = op;
             updateDisplay();
         }
-        return;
+        // Se for qualquer outro sinal (+, *, /, %, .), a função ignora
+        return; 
     }
 
+    // Se já houver conteúdo, tratamos a troca de operadores
     const lastChar = currentInput.slice(-1);
     const operators = ['+', '-', '*', '/', '%'];
 
-    // Se o último caractere já for um operador, substitui pelo novo
+    // Se o usuário clicar em um operador logo após o sinal de "-" inicial, 
+    // ou após outro operador, ele substitui o anterior
     if (operators.includes(lastChar)) {
+        // Impede que o sinal "-" inicial seja substituído por outro operador 
+        // para não violar a regra de "apenas o menos pode começar"
+        if (currentInput === "-") return; 
+
         currentInput = currentInput.slice(0, -1) + op;
     } else {
         currentInput += op;
@@ -49,15 +60,11 @@ function backspace() {
 
 function calculate() {
     try {
-        if (!currentInput) return;
+        if (!currentInput || currentInput === "-") return;
 
-        // Converte porcentagem (ex: 50% vira 0.5)
         let processed = currentInput.replace(/(\d+)%/g, "($1/100)");
-
-        // Eval realiza a operação matemática
         let result = eval(processed);
 
-        // Formata o resultado para evitar números gigantes
         currentInput = Number(result.toFixed(8)).toString();
         updateDisplay();
     } catch (e) {
